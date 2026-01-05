@@ -60,14 +60,14 @@ const SignInForm = () => {
 
 
   return (
-    <div className="flex flex-col gap-[6px]">
+    <div className="flex flex-col gap-6">
       <Card className="!bg-transparent border-0">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Sign in to toto.ai</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-[6px]">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="email"
@@ -106,7 +106,7 @@ const SignInForm = () => {
                 className="w-full text-white"
               >
                 {isLoading && (
-                  <RiLoader2Line className="w-[4px] h-[4px] animate-spin" />
+                  <RiLoader2Line className="w-4 h-4 animate-spin" />
                 )}
                 Sign In
               </Button>

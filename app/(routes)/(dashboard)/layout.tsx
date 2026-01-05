@@ -25,7 +25,7 @@ export default async function DashboardLayout({
     <Suspense
       fallback={
         <div className="flex items-center justify-center h-screen">
-          <RiLoader5Fill className="w-[16px] h-[16px] animate-spin text-primary" />
+          <RiLoader5Fill className="w-16 h-16 animate-spin text-primary" />
         </div>
       }
     >

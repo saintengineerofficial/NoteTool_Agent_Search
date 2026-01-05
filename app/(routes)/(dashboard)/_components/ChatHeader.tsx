@@ -21,7 +21,7 @@ const ChatHeader = ({ title, showActions = false }: Props) => {
   };
   return (
     <header
-      className="fixed top-0 inset-0 z-[9] h-[40px]
+      className="fixed top-0 inset-0 z-9 h-40
       flex items-center px-2  md:px-8 py-1 bg-background/20 backdrop-blur-sm"
     >
       {(!open || isMobile) && <SidebarTrigger className="h-10" />}
@@ -49,7 +49,7 @@ const ChatHeader = ({ title, showActions = false }: Props) => {
             <Button
               variant="ghost"
               size="sm"
-              className="cursor-pointer !bg-muted/10"
+              className="cursor-pointer bg-muted/10!"
               onClick={onClick}
             >
               <RiAddLine className="w-8 h-8" />
@@ -58,7 +58,7 @@ const ChatHeader = ({ title, showActions = false }: Props) => {
             <Button
               variant="ghost"
               size="sm"
-              className="cursor-pointer !bg-muted/10"
+              className="cursor-pointer bg-muted/10!"
             // onClick={onToggleHistory}
             >
               <RiHistoryLine className="w-8 h-8" />

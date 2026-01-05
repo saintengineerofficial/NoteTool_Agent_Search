@@ -25,7 +25,7 @@ const MainSection = (props: { id: string }) => {
               md:text-[35px] text-[24px]
              opacity-0 fade-in-up [animation-delay:200ms] z-0"
               >
-                <RiEmotionHappyFill className="!size-[24px] md:!size-[40px] lg:mt-2" />
+                <RiEmotionHappyFill className="size-[24px]! md:!size-[40px] lg:mt-2" />
                 How can I help you today?
               </h1>
             </div>

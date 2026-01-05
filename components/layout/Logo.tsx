@@ -8,7 +8,7 @@ type LogoProps = {
 
 const Logo = ({ url = '/' }: LogoProps) => {
   return (
-    <Link href={url} className="w-fit flex items-center gap-[2px]">
+    <Link href={url} className="w-fit flex items-center gap-2">
       <div className="flex aspect-square size-8 items-center justify-center rounded-md overflow-hidden bg-primary text-primary-foreground">
         <Image src="/logo.png" width={36} height={36} alt="Waveai" />
       </div>

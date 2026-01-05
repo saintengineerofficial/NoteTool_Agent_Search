@@ -22,7 +22,7 @@ const NavNotes = () => {
           <SidebarGroupAction
             className="mt-[1.5px] flex items-center size-5.5 rounded-md bg-primary/20 border cursor-pointer"
           >
-            <RiAddLine className="!size-5" />
+            <RiAddLine className="size-5!" />
             <span className="sr-only">Add Notes</span>
           </SidebarGroupAction>
         </SidebarGroupLabel>
