@@ -54,6 +54,8 @@ const ChatInput = (props: Props) => {
   };
 
   const onSubmit = () => {
+    if (disabled) return;
+
     if (!input.trim()) {
       toast.error("Please type in a message");
       return;
@@ -69,6 +71,7 @@ const ChatInput = (props: Props) => {
       return;
     }
 
+    // replaceState只是修改当前页面的URL，不会刷新页面
     window.history.replaceState({}, "", `/chat/${chatId}`);
 
     sendMessage(

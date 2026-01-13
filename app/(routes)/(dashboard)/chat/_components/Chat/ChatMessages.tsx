@@ -6,6 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import { RiCircleFill } from "@remixicon/react";
 import { useStickToBottom } from "use-stick-to-bottom";
+import PreviewMessage from "./PreviewMessage";
+import LoadingMessages from "./LoadingMessages";
+import Greeting from "./Greeting";
 
 interface Props {
   chatId?: string;
@@ -32,20 +35,22 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
 
           {!isLoading && messages.length === 0 && <Greeting />}
 
-          {/* {messages?.map((message, index) => (
-            
-          ))} */}
+          {messages?.map((message, index) => (
+            <PreviewMessage
+              key={message.id}
+              message={message}
+              isLoading={status === "streaming" && messages.length - 1 === index}
+            />
+          ))}
 
-          {status === "submitted" &&
-            messages.length > 0 &&
+          {status === "submitted" && messages.length > 0 &&
             messages[messages.length - 1]?.role === "user" && (
               <span>
                 <RiCircleFill className="w-4 h-4 animate-bounce rounded-full dark:text-white" />
               </span>
             )}
 
-          {status === "streaming" &&
-            messages.length > 0 &&
+          {status === "streaming" && messages.length > 0 &&
             messages[messages.length - 1]?.role === "assistant" && (
               <span>
                 <RiCircleFill className="w-4 h-4 animate-bounce rounded-full dark:text-white" />
@@ -53,10 +58,7 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
             )}
 
           {status === "error" && error && (
-            <ErrorAlert
-              title="Chat Error"
-              message={error.message ?? "Something went wrong"}
-            />
+            <ErrorAlert title="Chat Error" message={error.message ?? "Something went wrong"} />
           )}
         </ConversationContent>
       </Conversation>
@@ -65,32 +67,7 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
   );
 };
 
-function LoadingMessages() {
-  return (
-    <div className="w-full max-w-full mx-auto mt-5">
-      <div className="flex items-start space-x-3">
-        <Skeleton className="h-8 w-8 rounded-full" />
-        <div className="w-full flex flex-col space-y-2">
-          <Skeleton className="h-8 w-8/12 rounded-lg" />
-          <Skeleton className="h-8 w-full rounded-lg" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function Greeting() {
-  return (
-    <div className="w-full h-full md:mt-3 px-2 flex flex-col">
-      <div className="text-2xl font-semibold opacity-0 fade-in-up [animation-delay:200ms]">
-        Hello there!
-      </div>
-      <div className="text-2xl  text-zinc-500 opacity-0 fade-in-up [animation-delay:400ms]">
-        How can I help you today?
-      </div>
-    </div>
-  );
-}
 
 function ErrorAlert({ title, message }: { title: string; message: string }) {
   return (
