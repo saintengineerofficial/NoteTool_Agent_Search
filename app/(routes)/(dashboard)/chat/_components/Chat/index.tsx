@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import { DefaultChatTransport, UIMessage } from "ai"
 import React, { useEffect, useState } from "react"
 import { useChat } from "@ai-sdk/react"
@@ -39,8 +39,8 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
         }
       },
     }),
-    async onToolCall() { },
-    onFinish: () => { },
+    async onToolCall() {},
+    onFinish: () => {},
     onError: error => {
       console.log("Chat error", error)
     },
@@ -64,6 +64,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
           stop={stop}
           initialModelId={DEFAULT_MODEL_ID}
           sendMessage={sendMessage}
+          disabled={inputDisable}
         />
       </div>
     )
@@ -71,13 +72,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
 
   return (
     <div className="bg-background flex h-screen min-w-0 flex-col overflow-x-hidden">
-      <ChatMessages
-        chatId={chatId}
-        messages={messages}
-        status={status}
-        error={error}
-        isLoading={initialLoading}
-      />
+      <ChatMessages chatId={chatId} messages={messages} status={status} error={error} isLoading={initialLoading} />
       <div className="bg-background sticky inset-y-1 bottom-1 z-1 mt-2 flex w-full gap-2 px-4 pb-1">
         <div className="relative mx-auto w-full md:max-w-3xl">
           <ChatInput
@@ -89,6 +84,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
             stop={stop}
             initialModelId={DEFAULT_MODEL_ID}
             sendMessage={sendMessage}
+            disabled={inputDisable}
           />
         </div>
       </div>
