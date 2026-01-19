@@ -41,7 +41,7 @@ const Hero = () => {
           </Button>
 
           <Button variant="ghost" className="hover:bg-muted/20 rounded-full px-6 py-5 text-sm sm:py-6 sm:text-base" asChild>
-            <Link href="/learn-more">Learn More</Link>
+            <Link href="/">Learn More</Link>
           </Button>
         </div>
       </div>

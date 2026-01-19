@@ -28,8 +28,8 @@ const SignInForm = () => {
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInFormSchema),
     defaultValues: {
-      email: "",
-      password: ""
+      email: "youke@gmail.com",
+      password: "123456789"
     },
   })
 
@@ -108,7 +108,7 @@ const SignInForm = () => {
                 {isLoading && (
                   <RiLoader2Line className="w-4 h-4 animate-spin" />
                 )}
-                Sign In
+                Sign In (u can sign in directly)
               </Button>
               <div className="text-center text-sm">
                 Don't have an account?{" "}
