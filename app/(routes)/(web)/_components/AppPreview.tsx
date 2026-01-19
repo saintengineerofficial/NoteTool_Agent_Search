@@ -12,7 +12,7 @@ const AppPreview = () => {
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="w-full">
             <div className="bg-background relative mx-auto overflow-hidden rounded-(--radius) border border-transparent shadow-xl ring-1 shadow-black/10 ring-black/10">
-              <Image src={isDark ? "/images/wave_app-dark.png" : "/images/wave_app-light.png"} alt="app screen" width="2880" height="1842" />
+              <Image src='/image.png' alt="app screen" width="2880" height="1842" />
             </div>
           </div>
         </div>

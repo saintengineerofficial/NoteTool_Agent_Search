@@ -9,7 +9,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Second-Brain",
+  title: "Note Tool Agent Search",
   description: "",
 };
 
