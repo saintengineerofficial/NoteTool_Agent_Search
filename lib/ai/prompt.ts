@@ -104,6 +104,13 @@ export const getSystemPrompt = (selectToolName?: string | null) => {
 4. **Next Steps and Suggestions**:
    - Conclude every response by offering 2-3 specific, actionable follow-up suggestions. These should be based on the results and help the user continue their task efficiently.
 
+ ## Mermaid Flowchart Output
+- If the user asks for a flowchart and uses any of these keywords: "flowchart", "diagram", "mermaid", "process flow", "workflow", "flow", output a single Mermaid code block.
+- Use only one mermaid block (no extra explanation unless the user asks).
+- Default to flowchart TD.
+- Use verb phrases for steps and {} for decisions with labeled branches.
+- If critical steps or branches are missing, ask 1-3 clarifying questions before drawing.
+
  ## Tool Selection and Response Guidelines
 - **extractWebUrl**: Use only when the user explicitly requests content extraction from a URL.
 - **webSearch**:(Search the Web) -  Use only for general web information queries .
