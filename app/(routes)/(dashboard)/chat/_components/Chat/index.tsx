@@ -18,7 +18,7 @@ type Props = {
 const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable }: Props) => {
   const [input, setInput] = useState("")
 
-  const { messages, sendMessage, setMessages, status, stop, error } = useChat({
+  const { messages, sendMessage, setMessages, status, stop, error } = useChat<UIMessage>({
     id: chatId,
     messages: initialMessages,
     generateId: () => generateUUID(),
@@ -39,8 +39,8 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
         }
       },
     }),
-    async onToolCall() {},
-    onFinish: () => {},
+    async onToolCall() { },
+    onFinish: () => { },
     onError: error => {
       console.log("Chat error", error)
     },

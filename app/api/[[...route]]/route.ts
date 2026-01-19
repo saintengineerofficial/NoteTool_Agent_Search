@@ -5,9 +5,6 @@ import { getAuthUser } from "@/lib/hono/hono-middlware"
 import { noteRoute } from "./note"
 import { chatRoute } from "./chat"
 
-// import { chatRoute } from "./chat";
-// import { subscriptionRoute } from "./subscription";
-
 export const runtime = "nodejs"
 
 const app = new Hono()
@@ -22,7 +19,6 @@ app.onError((err, c) => {
 })
 
 const routes = app.basePath("/api").route("/note", noteRoute).route("/chat", chatRoute)
-// .route("/subscription", subscriptionRoute);
 
 // 中间价
 routes.get("/", getAuthUser, c => {

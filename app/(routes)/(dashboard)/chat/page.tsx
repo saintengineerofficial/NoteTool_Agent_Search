@@ -9,8 +9,8 @@ const Page = (props: Props) => {
   const id = generateUUID();
 
   return (
-    <>
-      {/* <ChatHeader showActions /> */}
+    <React.Fragment>
+      <ChatHeader showActions />
       <div className="relative w-full">
         <ChatInterface
           key={id}
@@ -20,7 +20,7 @@ const Page = (props: Props) => {
           onlyInput={false}
         />
       </div>
-    </>
+    </React.Fragment>
   )
 }
 

@@ -15,6 +15,7 @@ import { AVAILABLE_TOOLS, type AvailableToolType } from "@/lib/ai/tools/constant
 import { RiSquareFill } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import useViewState from "@/hooks/useViewState"
 
 type Props = {
   chatId: string
@@ -32,9 +33,11 @@ type Props = {
 const ChatInput = (props: Props) => {
   const { chatId, input, initialModelId, status, className, setInput, sendMessage, disabled, stop } = props
 
-  const { localModelId, setLocalModelId } = useLocalChat();
   const [toolsOpen, setToolsOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<AvailableToolType | null>()
+  const { setIsChatView } = useViewState()
+  const { localModelId, setLocalModelId } = useLocalChat();
+
 
   const isGenerating = status === "streaming" || status === "submitted"
   const selectedModelId = localModelId || initialModelId
@@ -73,6 +76,7 @@ const ChatInput = (props: Props) => {
 
     // replaceState只是修改当前页面的URL，不会刷新页面
     window.history.replaceState({}, "", `/chat/${chatId}`);
+    setIsChatView(true);
 
     sendMessage(
       { role: 'user', parts: [{ type: 'text', text: input }] },
