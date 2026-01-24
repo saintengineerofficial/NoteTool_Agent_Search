@@ -33,14 +33,15 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
           body: {
             id,
             message: messages.at(-1), // 只把最后一条消息user给服务端
+            // message: messages,
             selectedModelId: DEFAULT_MODEL_ID,
             ...body,
           },
         }
       },
     }),
-    async onToolCall() { },
-    onFinish: () => { },
+    async onToolCall() {},
+    onFinish: () => {},
     onError: error => {
       console.log("Chat error", error)
     },

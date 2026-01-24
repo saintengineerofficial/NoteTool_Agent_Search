@@ -24,7 +24,7 @@ export const createNote = (userId: string) =>
         return {
           code: 200,
           messsage: "success",
-          data: note,
+          data: { note },
         }
       } catch (error) {
         return {

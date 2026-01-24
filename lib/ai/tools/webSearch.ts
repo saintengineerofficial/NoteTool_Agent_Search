@@ -1,6 +1,7 @@
 import { tool } from "ai"
 import z from "zod"
 import { tavily } from "@tavily/core"
+import { withTimeout } from "./utils"
 
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY })
 
@@ -12,20 +13,23 @@ export const webSearch = () =>
     }),
     execute: async ({ query }) => {
       try {
-        const response = await tvly.search(query, {
-          includeAnswer: true,
-          includeFavicon: true,
-          includeImages: false,
-          maxResults: 3,
-        })
-        console.log("🚀 ~ webSearch ~ response:", response)
+        const response = await withTimeout(
+          tvly.search(query, {
+            includeAnswer: true,
+            includeFavicon: true,
+            includeImages: false,
+            maxResults: 5,
+          }),
+          12000
+        )
 
         const results = response.results.map(r => ({
           title: r.title,
           url: r.url,
-          content: r.content,
-          // favicon: r.favicon || null,
+          content: (r.content ?? "").slice(0, 800), // ✅ 裁剪
         }))
+
+        // console.log("🚀 ~ webSearch ~ response:", response)
 
         return {
           code: 200,

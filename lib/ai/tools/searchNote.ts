@@ -33,7 +33,7 @@ export const searchNote = (userId: string) =>
         return {
           code: 200,
           message: `Found ${notes.length} notes matching "${query}"`,
-          data: notes,
+          data: { notes },
         }
       } catch (error) {
         return {

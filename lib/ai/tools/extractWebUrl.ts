@@ -1,6 +1,7 @@
 import { tool } from "ai"
 import z from "zod"
 import { tavily } from "@tavily/core"
+import { withTimeout } from "./utils"
 
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY })
 
@@ -13,14 +14,17 @@ export const extractWebUrl = () =>
     }),
     execute: async ({ urls }) => {
       try {
-        const response = await tvly.extract(urls, {
-          includeFavicon: true,
-          includeImages: true,
-          topoc: "general",
-          format: "markdown",
-          extractDepth: "basic",
-        })
-        console.log("🚀 ~ webSearch ~ response:", response)
+        const response = await withTimeout(
+          tvly.extract(urls, {
+            includeFavicon: true,
+            includeImages: true,
+            topoc: "general",
+            format: "markdown",
+            extractDepth: "basic",
+          }),
+          12000
+        )
+        // console.log("🚀 ~ webSearch ~ response:", response)
 
         const results = response.results.map(r => ({
           url: r.url,
