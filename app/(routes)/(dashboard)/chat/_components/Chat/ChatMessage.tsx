@@ -23,15 +23,11 @@ const ChatMessage = ({ message, isLoading }: Props) => {
             : "bg-muted! text-foreground! p-2.5! text-[14.5px]"
         )}>
         {message.parts.map((part, i) => {
-          console.log("🚀 ~ ChatMessage ~ part:", part)
+          // console.log("🚀 ~ ChatMessage ~ part:", part)
 
           switch (part.type) {
             case "text": {
-              return (
-                <MessageResponse key={`${message.id}-${i}`}>
-                  {part.text}
-                </MessageResponse>
-              )
+              return <MessageResponse key={`${message.id}-${i}`}>{part.text}</MessageResponse>
             }
 
             case "reasoning": {
@@ -44,27 +40,19 @@ const ChatMessage = ({ message, isLoading }: Props) => {
             }
 
             case ToolTypeEnum.CreateNote: {
-              return (
-                <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
-              )
+              return <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
             }
 
             case ToolTypeEnum.SearchNote: {
-              return (
-                <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
-              )
+              return <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
             }
 
             case ToolTypeEnum.WebSearch: {
-              return (
-                <ToolCall key={part.toolCallId}{...part} isLoading={isLoading} />
-              )
+              return <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
             }
 
             case ToolTypeEnum.ExtractWebUrl: {
-              return (
-                <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
-              )
+              return <ToolCall key={part.toolCallId} {...part} isLoading={isLoading} />
             }
 
             default:

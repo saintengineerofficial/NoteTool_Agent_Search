@@ -18,7 +18,7 @@ type ChatDetail = {
 
 export const useChat = () => {
   return useQuery({
-    queryKey: ["chat"],
+    queryKey: ["chats"],
     queryFn: async () => {
       const response = await api.chat.list.$get()
       if (!response.ok) throw new Error("Failed to fetch chat")
