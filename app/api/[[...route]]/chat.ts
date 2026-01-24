@@ -83,6 +83,9 @@ export const chatRoute = new Hono()
       // const modelProvider = isProduction ? ModelProvider.languageModel(selectedModelId) : ModelProvider.languageModel(DEVELOPMENT_CHAT_MODEL)
       const modelProvider = ModelProvider.languageModel(DEVELOPMENT_CHAT_MODEL)
 
+      console.log("📌 Using model:", DEVELOPMENT_CHAT_MODEL)
+      console.log("📌 Model provider:", modelProvider)
+
       const result = streamText({
         model: modelProvider,
         messages: modelMessages,
@@ -96,7 +99,14 @@ export const chatRoute = new Hono()
         },
         toolChoice: "auto",
         onError({ error }) {
-          console.error(error)
+          console.error("❌ streamText onError:", error)
+          if (error instanceof Error) {
+            console.error("❌ Error name:", error.name)
+            console.error("❌ Error message:", error.message)
+            console.error("❌ Error stack:", error.stack)
+          } else {
+            console.error("❌ Unknown error type:", typeof error, error)
+          }
         },
       })
 
@@ -125,10 +135,19 @@ export const chatRoute = new Hono()
         },
       })
     } catch (error) {
+      console.error("❌❌❌ Chat API Error ❌❌❌")
+      console.error("Model used:", DEVELOPMENT_CHAT_MODEL)
+      console.error("Error type:", error instanceof Error ? error.constructor.name : typeof error)
+      console.error("Error message:", error instanceof Error ? error.message : String(error))
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace")
+      console.error("Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+
       if (error instanceof HTTPException) {
         throw error
       }
-      throw new HTTPException(500, { message: "Internal server error" })
+      throw new HTTPException(500, {
+        message: error instanceof Error ? error.message : "Internal server error",
+      })
     }
   })
   .get("/list", getAuthUser, async c => {

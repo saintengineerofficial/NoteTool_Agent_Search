@@ -34,8 +34,8 @@ export const chatModels: ChatModel[] = [
 ] as const
 
 export const DEFAULT_MODEL_ID = chatModels[0].id
-export const DEVELOPMENT_CHAT_MODEL = "models/gemini-2.5-flash"
-// export const DEVELOPMENT_CHAT_MODEL = "deepseek-chat"
+// export const DEVELOPMENT_CHAT_MODEL = "models/gemini-2.5-flash"
+export const DEVELOPMENT_CHAT_MODEL = "deepseek-chat"
 
 export const MODEL_OPTIONS = chatModels.map(m => ({
   value: m.id,

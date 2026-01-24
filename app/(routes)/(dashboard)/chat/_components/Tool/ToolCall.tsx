@@ -20,8 +20,8 @@ interface ToolCallProps {
 const ToolCall = ({ type, state, output, input, isLoading, errorText }: ToolCallProps) => {
   // console.log("🚀 ~ ToolCall ~ type, state, output, input:", type, state, output, input)
 
-  // const toolName = type.startsWith("tool-") ? type.slice(5) : type
-  const toolName = type.split("-")[1]
+  const toolName = type.startsWith("tool-") ? type.slice(5) : type
+  // const toolName = type.split("-")[1]
   const { text, icon } = getToolStatus(toolName, state, output)
 
   const renderOutput = () => {

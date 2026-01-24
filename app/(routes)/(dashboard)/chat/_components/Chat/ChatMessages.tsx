@@ -20,22 +20,22 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
   const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
   const lastMsgIdRef = useRef<string | undefined>(undefined)
 
-  useEffect(() => {
-    if (messages || status === "submitted" || status === "ready") {
-      scrollToBottom() // 保持在底部
-    }
-  }, [messages, status, scrollToBottom])
-
   // useEffect(() => {
-  //   const lastId = messages[messages.length - 1]?.id
-  //   const hasNewMessage = lastId && lastId !== lastMsgIdRef.current
-
-  //   // 只在“新增消息”时尝试滚动，且仅在用户本来就在底部时滚
-  //   if (hasNewMessage) {
-  //     scrollToBottom({ preserveScrollPosition: true })
-  //     lastMsgIdRef.current = lastId
+  //   if (messages || status === "submitted" || status === "ready") {
+  //     scrollToBottom() // 保持在底部
   //   }
-  // }, [messages.length, scrollToBottom])
+  // }, [messages, status, scrollToBottom])
+
+  useEffect(() => {
+    const lastId = messages[messages.length - 1]?.id
+    const hasNewMessage = lastId && lastId !== lastMsgIdRef.current
+
+    // 只在“新增消息”时尝试滚动，且仅在用户本来就在底部时滚
+    if (hasNewMessage) {
+      scrollToBottom({ preserveScrollPosition: true })
+      lastMsgIdRef.current = lastId
+    }
+  }, [messages.length, scrollToBottom])
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto">

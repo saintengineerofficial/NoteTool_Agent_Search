@@ -11,11 +11,11 @@ const createLanguageModels = () => {
     models[model.id] = gateway.languageModel(model.id)
   })
 
-  // models[DEVELOPMENT_CHAT_MODEL] = deepseek.languageModel(DEVELOPMENT_CHAT_MODEL)
-  // models["title-model"] = isProduction ? gateway.languageModel("google/gemini-2.5-flash") : deepseek.languageModel(DEVELOPMENT_CHAT_MODEL)
+  models[DEVELOPMENT_CHAT_MODEL] = deepseek.languageModel(DEVELOPMENT_CHAT_MODEL)
+  models["title-model"] = isProduction ? gateway.languageModel("google/gemini-2.5-flash") : deepseek.languageModel(DEVELOPMENT_CHAT_MODEL)
 
-  models[DEVELOPMENT_CHAT_MODEL] = google.languageModel(DEVELOPMENT_CHAT_MODEL)
-  models["title-model"] = isProduction ? gateway.languageModel("google/gemini-2.5-flash") : google.languageModel(DEVELOPMENT_CHAT_MODEL)
+  // models[DEVELOPMENT_CHAT_MODEL] = google.languageModel(DEVELOPMENT_CHAT_MODEL)
+  // models["title-model"] = isProduction ? gateway.languageModel("google/gemini-2.5-flash") : google.languageModel(DEVELOPMENT_CHAT_MODEL)
 
   return models
 }
