@@ -20,12 +20,6 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
   const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
   const lastMsgIdRef = useRef<string | undefined>(undefined)
 
-  // useEffect(() => {
-  //   if (messages || status === "submitted" || status === "ready") {
-  //     scrollToBottom() // 保持在底部
-  //   }
-  // }, [messages, status, scrollToBottom])
-
   useEffect(() => {
     const lastId = messages[messages.length - 1]?.id
     const hasNewMessage = lastId && lastId !== lastMsgIdRef.current

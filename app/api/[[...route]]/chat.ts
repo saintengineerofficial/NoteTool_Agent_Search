@@ -33,7 +33,7 @@ export const chatRoute = new Hono()
     try {
       const user = c.get("user")
       const { id, message, selectedModelId, selectedToolName } = c.req.valid("json")
-      console.log("🚀 ~ message:", message)
+      // console.log("🚀 ~ message:", message)
 
       let chat = await prisma.chat.findUnique({
         where: { id },

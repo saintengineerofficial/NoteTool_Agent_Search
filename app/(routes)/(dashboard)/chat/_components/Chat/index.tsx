@@ -27,13 +27,11 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
       api: "/api/chat",
       // 发送前最后执行的函数
       prepareSendMessagesRequest({ messages, id, body }) {
-        console.log("🚀 ~ prepareSendMessagesRequest ~ messages:", messages)
-
+        // console.log("🚀 ~ prepareSendMessagesRequest ~ messages:", messages)
         return {
           body: {
             id,
-            message: messages.at(-1), // 只把最后一条消息user给服务端
-            // message: messages,
+            message: messages.at(-3), // 只把最后3条消息user给服务端
             selectedModelId: DEFAULT_MODEL_ID,
             ...body,
           },
