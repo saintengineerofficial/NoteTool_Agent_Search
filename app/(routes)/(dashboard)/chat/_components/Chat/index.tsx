@@ -17,6 +17,8 @@ type Props = {
 
 const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable }: Props) => {
   const [input, setInput] = useState("")
+  const [requiresConfirm, setRequiresConfirm] = useState(false)
+  const [confirmMessage, setConfirmMessage] = useState("Please confirm the tool call by replying with 'confirm'.")
 
   const { messages, sendMessage, setMessages, status, stop, error } = useChat<UIMessage>({
     id: chatId,
@@ -25,6 +27,13 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
     // 自定义请求
     transport: new DefaultChatTransport({
       api: "/api/chat",
+      fetch: async (input, init) => {
+        const res = await fetch(input, init)
+        if (!res.ok && res.status === 409) {
+          setRequiresConfirm(true)
+        }
+        return res
+      },
       // 发送前最后执行的函数
       prepareSendMessagesRequest({ messages, id, body }) {
         // console.log("🚀 ~ prepareSendMessagesRequest ~ messages:", messages)
@@ -63,6 +72,9 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
           stop={stop}
           initialModelId={DEFAULT_MODEL_ID}
           sendMessage={sendMessage}
+          requiresConfirm={requiresConfirm}
+          confirmMessage={confirmMessage}
+          setRequiresConfirm={setRequiresConfirm}
           disabled={inputDisable}
         />
       </div>
@@ -83,6 +95,9 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
             stop={stop}
             initialModelId={DEFAULT_MODEL_ID}
             sendMessage={sendMessage}
+            requiresConfirm={requiresConfirm}
+            confirmMessage={confirmMessage}
+            setRequiresConfirm={setRequiresConfirm}
             disabled={inputDisable}
           />
         </div>

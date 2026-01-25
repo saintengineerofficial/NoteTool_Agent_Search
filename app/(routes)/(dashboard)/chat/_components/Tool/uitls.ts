@@ -5,7 +5,11 @@ import { AlertCircleIcon, CircleSlash, FileText, GlobeIcon, Lightbulb, SearchIco
 type Status = { text: string; icon: LucideIcon }
 
 export function getToolStatus(toolName: string, state: ToolUIPart["state"], output?: any): Status {
-  const notes = Array.isArray(output?.notes) ? output.notes : []
+  const notes = Array.isArray(output?.data?.notes)
+    ? output.data.notes
+    : Array.isArray(output?.notes)
+      ? output.notes
+      : []
   const count = notes.length
 
   switch (state) {

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma"
 import { tool } from "ai"
 import z from "zod"
+import { classifyToolError, fail, ok } from "./utils"
 
 export const createNote = (userId: string) =>
   tool({
@@ -21,17 +22,10 @@ export const createNote = (userId: string) =>
           },
         })
 
-        return {
-          code: 200,
-          messsage: "success",
-          data: { note },
-        }
+        return ok({ note })
       } catch (error) {
-        return {
-          code: 500,
-          data: null,
-          message: error instanceof Error ? error.message : "Failed to create note..",
-        }
+        const errorType = classifyToolError(error)
+        return fail(error instanceof Error ? error.message : "Failed to create note.", errorType)
       }
     },
   })

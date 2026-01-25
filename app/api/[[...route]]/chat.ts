@@ -23,6 +23,26 @@ function extractUserText(parts: UIMessagePart<any, any>[]): string {
   return texts.join("").trim()
 }
 
+type ToolErrorType = "rate_limit" | "auth" | "network" | "timeout" | "empty_result" | "invalid_format" | "unknown"
+
+function decideToolErrorNotice(errorType: ToolErrorType | undefined) {
+  switch (errorType) {
+    case "rate_limit":
+      return "工具调用触发限流，请稍后再试或缩小请求范围。"
+    case "auth":
+      return "工具认证失败，请检查相关配置后重试。"
+    case "network":
+    case "timeout":
+      return "工具调用网络异常/超时，请稍后再试。"
+    case "empty_result":
+      return "工具没有返回结果，请尝试换个关键词或补充细节。"
+    case "invalid_format":
+      return "工具输入格式可能不正确，请调整输入后再试。"
+    default:
+      return null
+  }
+}
+
 const chatSchema = z.object({
   id: z.string().min(1),
   message: z.custom<UIMessage>(),
@@ -127,6 +147,19 @@ export const chatRoute = new Hono()
         stopWhen: stepCountIs(5),
         tools,
         toolChoice,
+        onStepFinish(step) {
+          // 记录工具错误，用于在响应后给用户提示
+          const toolResults = step.toolResults ?? []
+          for (const r of toolResults) {
+            const output = (r as any)?.output
+            const errorType = output?.errorType as ToolErrorType | undefined
+            const notice = decideToolErrorNotice(errorType)
+            if (notice) {
+              ;(c as any).toolErrorNotice = notice
+              break
+            }
+          }
+        },
         onError({ error }) {
           console.error("streamText onError:", error)
         },
@@ -143,6 +176,14 @@ export const chatRoute = new Hono()
             const postAction = executeTool(toolName)
             if (postAction.type === "decide") {
               decideNextStep()
+            }
+            const toolErrorNotice = (c as any).toolErrorNotice as string | undefined
+            if (toolErrorNotice) {
+              messages.push({
+                id: generateUUID(),
+                role: "assistant",
+                parts: [{ type: "text", text: toolErrorNotice }],
+              } as any)
             }
             await prisma.message.createMany({
               data: messages.map(m => ({

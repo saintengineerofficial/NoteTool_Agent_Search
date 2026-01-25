@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma"
 import { tool } from "ai"
 import z from "zod"
+import { classifyToolError, fail, ok, retryWithBackoff } from "./utils"
 
 export const searchNote = (userId: string) =>
   tool({
@@ -11,7 +12,9 @@ export const searchNote = (userId: string) =>
     }),
     execute: async ({ query, limit = 10 }) => {
       try {
-        const notes = await prisma.note.findMany({
+        const notes = await retryWithBackoff(
+          () =>
+            prisma.note.findMany({
           where: {
             userId,
             // 满足任意一个分支就算匹配
@@ -28,19 +31,22 @@ export const searchNote = (userId: string) =>
             content: true,
             createdAt: true,
           },
-        })
+            }),
+          {
+            retries: 1,
+            shouldRetry: err => {
+              const type = classifyToolError(err)
+              return type === "timeout" || type === "network"
+            },
+          }
+        )
 
-        return {
-          code: 200,
-          message: `Found ${notes.length} notes matching "${query}"`,
-          data: { notes },
+        if (notes.length === 0) {
+          return { ...ok({ notes }, `No notes matching "${query}"`), errorType: "empty_result" }
         }
+        return ok({ notes }, `Found ${notes.length} notes matching "${query}"`)
       } catch (error) {
-        return {
-          code: 500,
-          data: null,
-          message: error instanceof Error ? error.message : "Failed to search note..",
-        }
+        return fail(error instanceof Error ? error.message : "Failed to search note.")
       }
     },
   })

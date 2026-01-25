@@ -28,10 +28,26 @@ type Props = {
   setInput: (val: string) => void
   sendMessage: UseChatHelpers<UIMessage>["sendMessage"]
   stop: () => void
+  requiresConfirm?: boolean
+  confirmMessage?: string
+  setRequiresConfirm?: (val: boolean) => void
 }
 
 const ChatInput = (props: Props) => {
-  const { chatId, input, initialModelId, status, className, setInput, sendMessage, disabled, stop } = props
+  const {
+    chatId,
+    input,
+    initialModelId,
+    status,
+    className,
+    setInput,
+    sendMessage,
+    disabled,
+    stop,
+    requiresConfirm,
+    confirmMessage,
+    setRequiresConfirm,
+  } = props
 
   const [toolsOpen, setToolsOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<AvailableToolType | null>()
@@ -78,6 +94,10 @@ const ChatInput = (props: Props) => {
     window.history.replaceState({}, "", `/chat/${chatId}`);
     setIsChatView(true);
 
+    if (/^(确认|确认继续|confirm)$/i.test(input.trim())) {
+      setRequiresConfirm?.(false)
+    }
+
     sendMessage(
       { role: 'user', parts: [{ type: 'text', text: input }] },
       { body: { selectedModelId, selectedToolName: selectedTool?.name || null } }
@@ -85,9 +105,34 @@ const ChatInput = (props: Props) => {
     setInput("");
   }
 
+  const handleConfirm = () => {
+    if (disabled) return;
+    if (!chatId) {
+      toast.error("Please reload chatId not found");
+      return;
+    }
+    if (status === "streaming") {
+      toast.error("Please wait for the current response to finish or stop it first!");
+      return;
+    }
+    setRequiresConfirm?.(false)
+    sendMessage(
+      { role: "user", parts: [{ type: "text", text: "确认" }] },
+      { body: { selectedModelId, selectedToolName: selectedTool?.name || null } }
+    )
+  }
+
   return (
     <PromptInput className={cn(`rounded-3xl`, className)} onSubmit={onSubmit}>
       <div className="relative w-full">
+        {requiresConfirm && (
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <span>{confirmMessage}</span>
+            <Button size="sm" variant="outline" onClick={handleConfirm}>
+              确认继续
+            </Button>
+          </div>
+        )}
         {selectedTool && (
           <div className="flex items-center gap-1 pt-1.5 pl-2">
             <div className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium">

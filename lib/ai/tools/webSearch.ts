@@ -1,7 +1,7 @@
 import { tool } from "ai"
 import z from "zod"
 import { tavily } from "@tavily/core"
-import { withTimeout } from "./utils"
+import { classifyToolError, fail, ok, retryWithBackoff, withTimeout } from "./utils"
 
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY })
 
@@ -13,14 +13,24 @@ export const webSearch = () =>
     }),
     execute: async ({ query }) => {
       try {
-        const response = await withTimeout(
-          tvly.search(query, {
-            includeAnswer: true,
-            includeFavicon: true,
-            includeImages: false,
-            maxResults: 5,
-          }),
-          12000
+        const response = await retryWithBackoff(
+          () =>
+            withTimeout(
+              tvly.search(query, {
+                includeAnswer: true,
+                includeFavicon: true,
+                includeImages: false,
+                maxResults: 5,
+              }),
+              12000
+            ),
+          {
+            retries: 2,
+            shouldRetry: err => {
+              const type = classifyToolError(err)
+              return type === "rate_limit" || type === "timeout" || type === "network"
+            },
+          }
         )
 
         const results = response.results.map(r => ({
@@ -31,21 +41,18 @@ export const webSearch = () =>
 
         // console.log("🚀 ~ webSearch ~ response:", response)
 
-        return {
-          code: 200,
-          message: "success",
-          data: {
-            answers: response.answer || "no summary available",
-            results,
-            responseTime: response.responseTime,
-          },
+        const data = {
+          answers: response.answer || "no summary available",
+          results,
+          responseTime: response.responseTime,
         }
+        if (results.length === 0) {
+          return { ...ok(data, "no results"), errorType: "empty_result" }
+        }
+        return ok(data)
       } catch (error) {
-        return {
-          code: 500,
-          message: error instanceof Error ? error.message : "Web search failed",
-          data: null,
-        }
+        const errorType = classifyToolError(error)
+        return fail(error instanceof Error ? error.message : "Web search failed", errorType)
       }
     },
   })
