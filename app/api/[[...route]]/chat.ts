@@ -14,11 +14,18 @@ import { searchNote } from "@/lib/ai/tools/searchNote"
 import { webSearch } from "@/lib/ai/tools/webSearch"
 import { extractWebUrl } from "@/lib/ai/tools/extractWebUrl"
 import { getSystemPrompt } from "@/lib/ai/prompt"
+import { handleToolRequest, planTask, executeTool, decideNextStep, setRequiresConfirm } from "@/lib/stat"
+
+function extractUserText(parts: UIMessagePart<any, any>[]): string {
+  const texts = parts
+    .filter((part: any) => part?.type === "text" && typeof part?.text === "string")
+    .map((part: any) => part.text)
+  return texts.join("").trim()
+}
 
 const chatSchema = z.object({
   id: z.string().min(1),
   message: z.custom<UIMessage>(),
-  // selectedModelId: z.custom<ChatModel["id"]>(),
   selectedModelId: z.string() as z.ZodType<ChatModel["id"]>,
   selectedToolName: z.string().nullable(),
 })
@@ -34,6 +41,26 @@ export const chatRoute = new Hono()
       const user = c.get("user")
       const { id, message, selectedModelId, selectedToolName } = c.req.valid("json")
       // console.log("🚀 ~ message:", message)
+
+      // 处理工具请求, 状态机判断
+      const selectedTool = selectedToolName ?? null
+      const toolName = selectedTool ?? "auto"
+      const inputSnapshot = JSON.stringify(message.parts)
+      const userText = extractUserText(message.parts)
+      const isConfirm = /^(确认|确认继续|confirm)$/i.test(userText)
+      if (isConfirm) {
+        setRequiresConfirm(false)
+      }
+      let action = handleToolRequest(toolName, inputSnapshot)
+      if (action.type === "plan") {
+        action = planTask(action.toolName, action.input)
+      }
+      if (action.type === "confirm") {
+        return c.json({ code: 409, message: action.message, data: null }, 409)
+      }
+      if (action.type === "respond") {
+        return c.json({ code: 400, message: action.message, data: null }, 400)
+      }
 
       let chat = await prisma.chat.findUnique({
         where: { id },
@@ -80,33 +107,28 @@ export const chatRoute = new Hono()
         },
       })
 
+      const tools = {
+        createNote: createNote(user.id),
+        searchNote: searchNote(user.id),
+        webSearch: webSearch(),
+        extractWebUrl: extractWebUrl(),
+      } as const
+
+      const toolChoice = selectedTool ?
+        ({ type: "tool", toolName: selectedTool as keyof typeof tools } as const) : "auto"
+      
       // const modelProvider = isProduction ? ModelProvider.languageModel(selectedModelId) : ModelProvider.languageModel(DEVELOPMENT_CHAT_MODEL)
       const modelProvider = ModelProvider.languageModel(DEVELOPMENT_CHAT_MODEL)
-
-      console.log("📌 Using model:", DEVELOPMENT_CHAT_MODEL)
-      console.log("📌 Model provider:", modelProvider)
 
       const result = streamText({
         model: modelProvider,
         messages: modelMessages,
         system: getSystemPrompt(selectedToolName),
         stopWhen: stepCountIs(5),
-        tools: {
-          createNote: createNote(user.id),
-          searchNote: searchNote(user.id),
-          webSearch: webSearch(),
-          extractWebUrl: extractWebUrl(),
-        },
-        toolChoice: "auto",
+        tools,
+        toolChoice,
         onError({ error }) {
-          console.error("❌ streamText onError:", error)
-          if (error instanceof Error) {
-            console.error("❌ Error name:", error.name)
-            console.error("❌ Error message:", error.message)
-            console.error("❌ Error stack:", error.stack)
-          } else {
-            console.error("❌ Unknown error type:", typeof error, error)
-          }
+          console.error("streamText onError:", error)
         },
       })
 
@@ -116,8 +138,12 @@ export const chatRoute = new Hono()
         generateMessageId: () => generateUUID(),
         originalMessages: newUIMessages,
         onFinish: async ({ messages, responseMessage }) => {
-          console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
+          // console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
           try {
+            const postAction = executeTool(toolName)
+            if (postAction.type === "decide") {
+              decideNextStep()
+            }
             await prisma.message.createMany({
               data: messages.map(m => ({
                 id: m.id || generateUUID(),
@@ -135,12 +161,8 @@ export const chatRoute = new Hono()
         },
       })
     } catch (error) {
-      console.error("❌❌❌ Chat API Error ❌❌❌")
-      console.error("Model used:", DEVELOPMENT_CHAT_MODEL)
-      console.error("Error type:", error instanceof Error ? error.constructor.name : typeof error)
-      console.error("Error message:", error instanceof Error ? error.message : String(error))
-      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace")
-      console.error("Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+      console.error("model", DEVELOPMENT_CHAT_MODEL)
+      console.error("Full error object", JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
 
       if (error instanceof HTTPException) {
         throw error
