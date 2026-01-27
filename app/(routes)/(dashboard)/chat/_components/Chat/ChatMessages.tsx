@@ -1,12 +1,12 @@
 import { ChatStatus, UIMessage } from "ai"
 import React, { useEffect, useRef } from "react"
 import { Conversation, ConversationContent } from "@/components/ai-elements/conversation"
-import { RiCircleFill } from "@remixicon/react"
 import { useStickToBottom } from "use-stick-to-bottom"
 import PreviewMessage from "./ChatMessage"
 import LoadingMessages from "./LoadingMessages"
 import Greeting from "./Greeting"
 import ChatErrorAlert from "./ChatErrorAlert"
+import { AnimatedMessage } from "./AnimatedMessage"
 
 interface Props {
   chatId?: string
@@ -41,22 +41,31 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
             {!isLoading && messages.length === 0 && <Greeting />}
 
             {messages?.map((message, index) => (
-              <PreviewMessage key={message.id} message={message} isLoading={status === "streaming" && messages.length - 1 === index} />
+              <AnimatedMessage key={message.id} delay={Math.min(index, 10) * 40}>
+                <PreviewMessage
+                  message={message}
+                  isLoading={status === "streaming" && messages.length - 1 === index}
+                />
+              </AnimatedMessage>
             ))}
 
-            {status === "submitted" && messages.length > 0 && messages[messages.length - 1]?.role === "user" && (
-              <span>
-                <RiCircleFill className="h-4 w-4 animate-bounce rounded-full dark:text-white" />
-              </span>
+            {(status === "submitted") && messages.length > 0 && messages[messages.length - 1]?.role === "user" && (
+              <AnimatedMessage delay={80}>
+                <LoadingMessages isDot={true} />
+              </AnimatedMessage>
             )}
 
-            {status === "streaming" && messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && (
-              <span>
-                <RiCircleFill className="h-4 w-4 animate-bounce rounded-full dark:text-white" />
-              </span>
-            )}
+            {/* {status === "streaming" && messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && (
+              <AnimatedMessage delay={80}>
+                <LoadingMessages isDot={true} />
+              </AnimatedMessage>
+            )} */}
 
-            {status === "error" && error && <ChatErrorAlert title="Chat Error" message={error.message ?? "Something went wrong"} />}
+            {status === "error" && error && (
+              <AnimatedMessage delay={60} direction="down">
+                <ChatErrorAlert title="Chat Error" message={error.message ?? "Something went wrong"} />
+              </AnimatedMessage>
+            )}
           </div>
         </ConversationContent>
       </Conversation>

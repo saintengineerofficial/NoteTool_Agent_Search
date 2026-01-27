@@ -94,10 +94,6 @@ const ChatInput = (props: Props) => {
     window.history.replaceState({}, "", `/chat/${chatId}`);
     setIsChatView(true);
 
-    if (/^(确认|确认继续|confirm)$/i.test(input.trim())) {
-      setRequiresConfirm?.(false)
-    }
-
     sendMessage(
       { role: 'user', parts: [{ type: 'text', text: input }] },
       { body: { selectedModelId, selectedToolName: selectedTool?.name || null } }

@@ -29,8 +29,17 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
       api: "/api/chat",
       fetch: async (input, init) => {
         const res = await fetch(input, init)
+
         if (!res.ok && res.status === 409) {
-          setRequiresConfirm(true)
+          try {
+            const payload = await res.clone().json()
+            setRequiresConfirm(Boolean(payload?.data?.requiresConfirm))
+            if (payload?.data?.confirmMessage) {
+              setConfirmMessage(payload.data.confirmMessage)
+            }
+          } catch {
+            setRequiresConfirm(true)
+          }
         }
         return res
       },
@@ -40,19 +49,20 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
         return {
           body: {
             id,
-            message: messages.at(-3), // 只把最后3条消息user给服务端
+            message: messages.at(-1), // 只把最后1条消息user给服务端
             selectedModelId: DEFAULT_MODEL_ID,
             ...body,
           },
         }
       },
     }),
-    async onToolCall() {},
-    onFinish: () => {},
+    async onToolCall() { },
+    onFinish: () => { },
     onError: error => {
       console.log("Chat error", error)
     },
   })
+
 
   useEffect(() => {
     if (initialMessages && initialMessages.length > 0) {

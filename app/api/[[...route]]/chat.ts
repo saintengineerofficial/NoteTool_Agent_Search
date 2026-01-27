@@ -14,12 +14,11 @@ import { searchNote } from "@/lib/ai/tools/searchNote"
 import { webSearch } from "@/lib/ai/tools/webSearch"
 import { extractWebUrl } from "@/lib/ai/tools/extractWebUrl"
 import { getSystemPrompt } from "@/lib/ai/prompt"
-import { handleToolRequest, planTask, executeTool, decideNextStep, setRequiresConfirm } from "@/lib/stat"
+import { handleToolRequest, planTask, executeTool, decideNextStep, setRequiresConfirm, resetChatState } from "@/lib/stat"
 
-function extractUserText(parts: UIMessagePart<any, any>[]): string {
-  const texts = parts
-    .filter((part: any) => part?.type === "text" && typeof part?.text === "string")
-    .map((part: any) => part.text)
+function extractUserText(parts?: UIMessagePart<any, any>[]): string {
+  if (!parts) return ""
+  const texts = parts.filter((part: any) => part?.type === "text" && typeof part?.text === "string").map((part: any) => part.text)
   return texts.join("").trim()
 }
 
@@ -60,26 +59,33 @@ export const chatRoute = new Hono()
     try {
       const user = c.get("user")
       const { id, message, selectedModelId, selectedToolName } = c.req.valid("json")
-      // console.log("🚀 ~ message:", message)
+      console.log("🚀 ~ message:", message)
+      const chatId = id
 
       // 处理工具请求, 状态机判断
       const selectedTool = selectedToolName ?? null
       const toolName = selectedTool ?? "auto"
-      const inputSnapshot = JSON.stringify(message.parts)
-      const userText = extractUserText(message.parts)
+      const inputSnapshot = JSON.stringify(message?.parts) || ""
+
+      const userText = extractUserText(message?.parts)
+      // 写入操作的时候要确认
       const isConfirm = /^(确认|确认继续|confirm)$/i.test(userText)
       if (isConfirm) {
-        setRequiresConfirm(false)
+        setRequiresConfirm(chatId, false)
       }
-      let action = handleToolRequest(toolName, inputSnapshot)
+      let action = handleToolRequest(chatId, toolName, inputSnapshot)
       if (action.type === "plan") {
-        action = planTask(action.toolName, action.input)
+        action = planTask(chatId, action.toolName, action.input)
       }
       if (action.type === "confirm") {
-        return c.json({ code: 409, message: action.message, data: null }, 409)
+        return c.json({ code: 409, message: action.message, data: { requiresConfirm: true, confirmMessage: action.message } }, 409)
       }
       if (action.type === "respond") {
         return c.json({ code: 400, message: action.message, data: null }, 400)
+      }
+      if (action.type === "decide") {
+        decideNextStep(chatId)
+        return c.json({ code: 409, message: "Unexpected decide state. Please retry.", data: null }, 409)
       }
 
       let chat = await prisma.chat.findUnique({
@@ -134,22 +140,35 @@ export const chatRoute = new Hono()
         extractWebUrl: extractWebUrl(),
       } as const
 
-      const toolChoice = selectedTool ?
-        ({ type: "tool", toolName: selectedTool as keyof typeof tools } as const) : "auto"
-      
+      const toolVar = selectedTool ? ({ type: "tool", toolName: selectedTool as keyof typeof tools } as const) : "auto"
+      const toolChoice = action.type === "call_tool" ? toolVar : "none"
+
       // const modelProvider = isProduction ? ModelProvider.languageModel(selectedModelId) : ModelProvider.languageModel(DEVELOPMENT_CHAT_MODEL)
       const modelProvider = ModelProvider.languageModel(DEVELOPMENT_CHAT_MODEL)
+
+      let toolCallCount = 0
+      let toolCalledInRun = false
 
       const result = streamText({
         model: modelProvider,
         messages: modelMessages,
         system: getSystemPrompt(selectedToolName),
-        stopWhen: stepCountIs(5),
+        stopWhen: stepCountIs(3),
         tools,
         toolChoice,
         onStepFinish(step) {
+          console.log("🚀 ~ step:", step)
+
           // 记录工具错误，用于在响应后给用户提示
           const toolResults = step.toolResults ?? []
+          if (toolResults?.length > 0) {
+            // 记录工具状态
+            toolCalledInRun = true
+            toolCallCount += toolResults.length
+            if (toolCallCount > 1 && !(c as any).toolErrorNotice) {
+              ;(c as any).toolErrorNotice = "检测到多次工具调用，本次仅支持一次工具调用，请简化请求后重试。"
+            }
+          }
           for (const r of toolResults) {
             const output = (r as any)?.output
             const errorType = output?.errorType as ToolErrorType | undefined
@@ -173,9 +192,14 @@ export const chatRoute = new Hono()
         onFinish: async ({ messages, responseMessage }) => {
           // console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
           try {
-            const postAction = executeTool(toolName)
-            if (postAction.type === "decide") {
-              decideNextStep()
+            if (toolCalledInRun) {
+              const postAction = executeTool(chatId, toolName)
+              if (postAction.type === "decide") {
+                decideNextStep(chatId)
+              }
+            } else {
+              // 重置状态
+              resetChatState(chatId)
             }
             const toolErrorNotice = (c as any).toolErrorNotice as string | undefined
             if (toolErrorNotice) {
@@ -190,7 +214,7 @@ export const chatRoute = new Hono()
                 id: m.id || generateUUID(),
                 role: m.role,
                 parts: JSON.parse(JSON.stringify(m.parts)),
-                chatId: chat.id,
+                chatId: chat!.id,
                 createdAt: new Date(),
                 updatedAt: new Date(),
               })),
