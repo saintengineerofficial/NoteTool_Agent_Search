@@ -63,3 +63,5 @@ ChatInput.tsx当用户选工具时，UI提示“已锁定工具：xxx”如果�
 ChatMessages.tsx对系统状态展示（比如“等待确认”）6) 记忆策略实现
 
 actions.ts 或新增 memory.ts 摘要生成：每 N 条更新摘要对话组装：summary + recent_messages schema.prisma 增加 ChatSummary 表或在 Chat 增加 summary 字段
+
+优化：对话UI/最近 N 轮 + “摘要 summary”/DB 入库裁剪

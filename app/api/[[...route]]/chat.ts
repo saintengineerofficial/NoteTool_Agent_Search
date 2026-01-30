@@ -59,7 +59,7 @@ export const chatRoute = new Hono()
     try {
       const user = c.get("user")
       const { id, message, selectedModelId, selectedToolName } = c.req.valid("json")
-      console.log("🚀 ~ message:", message)
+      // console.log("🚀 ~ message:", message)
       const chatId = id
 
       // 处理工具请求, 状态机判断
@@ -157,9 +157,6 @@ export const chatRoute = new Hono()
         tools,
         toolChoice,
         onStepFinish(step) {
-          console.log("🚀 ~ step:", step)
-
-          // 记录工具错误，用于在响应后给用户提示
           const toolResults = step.toolResults ?? []
           if (toolResults?.length > 0) {
             // 记录工具状态
@@ -169,6 +166,7 @@ export const chatRoute = new Hono()
               ;(c as any).toolErrorNotice = "检测到多次工具调用，本次仅支持一次工具调用，请简化请求后重试。"
             }
           }
+          // 记录工具错误，用于在响应后给用户提示
           for (const r of toolResults) {
             const output = (r as any)?.output
             const errorType = output?.errorType as ToolErrorType | undefined
@@ -192,6 +190,7 @@ export const chatRoute = new Hono()
         onFinish: async ({ messages, responseMessage }) => {
           // console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
           try {
+            // 工具状态
             if (toolCalledInRun) {
               const postAction = executeTool(chatId, toolName)
               if (postAction.type === "decide") {
