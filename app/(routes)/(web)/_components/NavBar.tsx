@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -19,22 +17,22 @@ function Navbar() {
         <Logo url="/" />
         <ul className="hidden items-center gap-6 text-sm font-normal md:flex xl:text-base">
           <li>
-            <Link href="#pricing" className="hover:text-foreground transition-colors">
+            <Link href="/" className="hover:text-foreground transition-colors">
               Pricing
             </Link>
           </li>
           <li>
-            <Link href="#features" className="hover:text-foreground transition-colors">
+            <Link href="/" className="hover:text-foreground transition-colors">
               Features
             </Link>
           </li>
           <li>
-            <Link href="#how-it-works" className="hover:text-foreground transition-colors">
+            <Link href="/" className="hover:text-foreground transition-colors">
               Blog
             </Link>
           </li>
           <li>
-            <Link href="#how-it-works" className="hover:text-foreground transition-colors">
+            <Link href="/" className="hover:text-foreground transition-colors">
               Contact us
             </Link>
           </li>
