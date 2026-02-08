@@ -1,11 +1,12 @@
 import type { ToolUIPart } from "ai"
-import React, { Fragment } from "react"
+import React, { Fragment, useEffect, useRef } from "react"
 import { getToolStatus } from "./uitls"
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
 import ToolHeader from "./ToolHeader"
 import { ToolTypeEnum } from "@/lib/ai/tools/constant"
 import ToolLoadingIndicator from "./ToolLoadingIndicator"
 import ToolRenders from "./ToolRenders"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface ToolCallProps {
   toolCallId: string
@@ -23,6 +24,19 @@ const ToolCall = ({ type, state, output, input, isLoading, errorText }: ToolCall
   const toolName = type.startsWith("tool-") ? type.slice(5) : type
   // const toolName = type.split("-")[1]
   const { text, icon } = getToolStatus(toolName, state, output)
+  const qc = useQueryClient()
+  const lastNoteIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (type !== ToolTypeEnum.CreateNote) return
+    if (state !== "output-available") return
+
+    const noteId = output?.data?.note?.id ?? output?.data?.id ?? null
+    if (!noteId || noteId === lastNoteIdRef.current) return
+
+    lastNoteIdRef.current = noteId
+    qc.invalidateQueries({ queryKey: ["notesList"] })
+  }, [type, state, output, qc])
 
   const renderOutput = () => {
     if (state === "output-available") {

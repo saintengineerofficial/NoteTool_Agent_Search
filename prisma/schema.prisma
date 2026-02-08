@@ -106,6 +106,7 @@ model Chat {
 
   messages Message[]
 
+  @@index([userId])
   @@map("chats")
 }
 
@@ -125,7 +126,11 @@ model Message {
   chatId String
   chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
+  // userId String?
+  // user User? @relation(fields: [userId],references: [id],onDelete: Cascade)
+
   @@index([chatId])
+  // @@index([userId])
   @@map("messages")
 }
 

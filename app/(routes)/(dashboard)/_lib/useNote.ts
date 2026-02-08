@@ -1,6 +1,6 @@
 import useNoteId from "@/hooks/useNoteId"
 import { api } from "@/lib/hono/hono-rpc"
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { InferRequestType, InferResponseType } from "hono"
 import { toast } from "sonner"
 
@@ -11,7 +11,7 @@ type ReqUpdateNoteType = InferRequestType<typeof api.note.update.$post>["json"]
 type ResUpdateNoteType = InferResponseType<typeof api.note.update.$post>
 
 export const useCreateNote = () => {
-  const qc = new QueryClient()
+  const qc = useQueryClient()
   const { setNoteId } = useNoteId()
 
   return useMutation<ResCreateNoteType, Error, ReqCreateNoteType>({
@@ -35,7 +35,7 @@ export const useCreateNote = () => {
 }
 
 export const useUpdateNote = () => {
-  const qc = new QueryClient()
+  const qc = useQueryClient()
 
   return useMutation<ResUpdateNoteType, Error, ReqUpdateNoteType>({
     mutationFn: async json => {

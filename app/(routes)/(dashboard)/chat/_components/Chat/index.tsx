@@ -6,7 +6,8 @@ import { generateUUID } from "@/lib/utils"
 import { DEFAULT_MODEL_ID } from "@/lib/ai/models"
 import ChatInput from "./ChatInput"
 import ChatMessages from "./ChatMessages"
-import { fetchWithHeaderTimeout } from "../../_lib/fetchWithRetry"
+import { fetchWithHeaderTimeout } from "../../_lib/fetchWithHeaderTimeout"
+import { useQueryClient } from "@tanstack/react-query"
 
 type Props = {
   chatId: string
@@ -20,6 +21,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
   const [input, setInput] = useState("")
   const [requiresConfirm, setRequiresConfirm] = useState(false)
   const [confirmMessage, setConfirmMessage] = useState("Please confirm the tool call by replying with 'confirm'.")
+  const qc = useQueryClient()
   const { messages, sendMessage, setMessages, status, stop, error } = useChat<UIMessage>({
     id: chatId,
     messages: initialMessages,
@@ -57,7 +59,9 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
       },
     }),
     async onToolCall() {},
-    onFinish: () => {},
+    onFinish: () => {
+      qc.invalidateQueries({ queryKey: ["chats"] })
+    },
     onError: error => {
       console.log("Chat error", error)
     },
