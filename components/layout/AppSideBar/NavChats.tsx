@@ -12,9 +12,10 @@ import {
 import { RiAddLine, RiFileTextLine, RiLoader5Fill } from "@remixicon/react"
 import LoaderOverlay from "@/components/global/LoaderOverlay"
 import { useChat } from "@/app/(routes)/(dashboard)/chat/_lib/useChat"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 const NavChats = () => {
+  const { chatId } = useParams<{ chatId?: string }>()
   const router = useRouter()
   const { isLoading, data: chatsList, isPending } = useChat()
 
@@ -28,7 +29,7 @@ const NavChats = () => {
 
   return (
     <React.Fragment>
-      <LoaderOverlay text="Creating Chat..." isLoading={isLoading} />
+      <LoaderOverlay text="Loading..." isLoading={isLoading} />
       <SidebarGroup>
         <SidebarGroupLabel>
           <h5>Chats</h5>
@@ -49,10 +50,10 @@ const NavChats = () => {
               </div>
             ) : (
               chatsList?.map(Chat => {
-                // const isActive = Chat.id === ChatId
+                const isActive = Chat.id === chatId
                 return (
                   <SidebarMenuItem key={Chat.id} onClick={() => handleChatClick(Chat.id)}>
-                    <SidebarMenuButton className="flex w-full items-center">
+                    <SidebarMenuButton isActive={isActive} className="flex w-full items-center">
                       <span className="bg-secondary flex h-8 w-8 items-center justify-center rounded-lg">
                         <RiFileTextLine className="text-primary h-4 w-4" />
                       </span>

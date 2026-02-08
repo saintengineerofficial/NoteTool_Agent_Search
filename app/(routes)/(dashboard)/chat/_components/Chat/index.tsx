@@ -1,12 +1,12 @@
 "use client"
 import { DefaultChatTransport, UIMessage } from "ai"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { generateUUID } from "@/lib/utils"
 import { DEFAULT_MODEL_ID } from "@/lib/ai/models"
 import ChatInput from "./ChatInput"
 import ChatMessages from "./ChatMessages"
-import { fetchWithRetry } from "../../_lib/fetchWithRetry"
+import { fetchWithHeaderTimeout } from "../../_lib/fetchWithRetry"
 
 type Props = {
   chatId: string
@@ -20,8 +20,6 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
   const [input, setInput] = useState("")
   const [requiresConfirm, setRequiresConfirm] = useState(false)
   const [confirmMessage, setConfirmMessage] = useState("Please confirm the tool call by replying with 'confirm'.")
-  const initRef = useRef(false)
-
   const { messages, sendMessage, setMessages, status, stop, error } = useChat<UIMessage>({
     id: chatId,
     messages: initialMessages,
@@ -30,7 +28,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
     transport: new DefaultChatTransport({
       api: "/api/chat",
       fetch: async (input, init) => {
-        const res = await fetchWithRetry(input, init)
+        const res = await fetchWithHeaderTimeout(input, init)
 
         if (!res.ok && res.status === 409) {
           try {
@@ -66,11 +64,9 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
   })
 
   useEffect(() => {
-    if(initRef.current) return
     if (initialMessages && initialMessages.length > 0) {
       setMessages(initialMessages)
     }
-    initRef.current = true
   }, [initialMessages])
 
   if (onlyInput) {
