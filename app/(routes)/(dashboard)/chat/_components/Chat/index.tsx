@@ -6,6 +6,7 @@ import { generateUUID } from "@/lib/utils"
 import { DEFAULT_MODEL_ID } from "@/lib/ai/models"
 import ChatInput from "./ChatInput"
 import ChatMessages from "./ChatMessages"
+import { fetchWithRetry } from "../../_lib/fetchWithRetry"
 
 type Props = {
   chatId: string
@@ -28,7 +29,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
     transport: new DefaultChatTransport({
       api: "/api/chat",
       fetch: async (input, init) => {
-        const res = await fetch(input, init)
+        const res = await fetchWithRetry(input, init)
 
         if (!res.ok && res.status === 409) {
           try {
@@ -56,19 +57,18 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
         }
       },
     }),
-    async onToolCall() { },
-    onFinish: () => { },
+    async onToolCall() {},
+    onFinish: () => {},
     onError: error => {
       console.log("Chat error", error)
     },
   })
 
-
   useEffect(() => {
     if (initialMessages && initialMessages.length > 0) {
       setMessages(initialMessages)
     }
-  }, [initialMessages, setMessages])
+  }, [initialMessages])
 
   if (onlyInput) {
     return (
@@ -86,6 +86,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
           confirmMessage={confirmMessage}
           setRequiresConfirm={setRequiresConfirm}
           disabled={inputDisable}
+          error={error}
         />
       </div>
     )
@@ -109,6 +110,7 @@ const Chat = ({ chatId, initialLoading, initialMessages, onlyInput, inputDisable
             confirmMessage={confirmMessage}
             setRequiresConfirm={setRequiresConfirm}
             disabled={inputDisable}
+            error={error}
           />
         </div>
       </div>

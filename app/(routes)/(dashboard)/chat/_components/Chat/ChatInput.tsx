@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { UIMessage, UseChatHelpers } from "@ai-sdk/react"
 import { ChatStatus } from "ai"
 import { ArrowUpIcon, LucideSettings2, XIcon } from "lucide-react"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useLocalChat } from "@/store/useLocalChat"
 import { MODEL_OPTIONS } from "@/lib/ai/models"
@@ -31,6 +31,7 @@ type Props = {
   requiresConfirm?: boolean
   confirmMessage?: string
   setRequiresConfirm?: (val: boolean) => void
+  error?: Error | null
 }
 
 const ChatInput = (props: Props) => {
@@ -47,80 +48,115 @@ const ChatInput = (props: Props) => {
     requiresConfirm,
     confirmMessage,
     setRequiresConfirm,
+    error,
   } = props
 
-  const [toolsOpen, setToolsOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false)
   const [selectedTool, setSelectedTool] = useState<AvailableToolType | null>()
+  const [lastSubmittedInput, setLastSubmittedInput] = useState<string | null>(null)
+  const [showRetry, setShowRetry] = useState(false)
   const { setIsChatView } = useViewState()
-  const { localModelId, setLocalModelId } = useLocalChat();
-
+  const { localModelId, setLocalModelId } = useLocalChat()
 
   const isGenerating = status === "streaming" || status === "submitted"
   const selectedModelId = localModelId || initialModelId
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setInput(newValue);
-  };
+    const newValue = e.target.value
+    setInput(newValue)
+  }
   const handleSelectTool = (tool: AvailableToolType) => {
-    setSelectedTool(tool);
-    setToolsOpen(false);
-  };
+    setSelectedTool(tool)
+    setToolsOpen(false)
+  }
 
   const handleStop = () => {
-    stop();
-    toast.info("Generation stopped!!");
-  };
+    stop()
+    toast.info("Generation stopped!!")
+  }
 
   const onSubmit = () => {
-    if (disabled) return;
+    if (disabled) return
 
     if (!input.trim()) {
-      toast.error("Please type in a message");
-      return;
+      toast.error("Please type in a message")
+      return
     }
 
     if (!chatId) {
-      toast.error("Please reload chatId not found");
-      return;
+      toast.error("Please reload chatId not found")
+      return
     }
 
     if (status === "streaming") {
-      toast.error("Please wait for the current response to finish or stop it first!");
-      return;
+      toast.error("Please wait for the current response to finish or stop it first!")
+      return
     }
 
     // replaceState只是修改当前页面的URL，不会刷新页面
-    window.history.replaceState({}, "", `/chat/${chatId}`);
-    setIsChatView(true);
+    window.history.replaceState({}, "", `/chat/${chatId}`)
+    setIsChatView(true)
 
+    setLastSubmittedInput(input)
+    setShowRetry(false)
     sendMessage(
-      { role: 'user', parts: [{ type: 'text', text: input }] },
-      { body: { selectedModelId, selectedToolName: selectedTool?.name || null } }
+      { role: "user", parts: [{ type: "text", text: input }] },
+      { body: { selectedModelId, selectedToolName: selectedTool?.toolName || null } }
     )
-    setInput("");
+    setInput("")
+  }
+
+  const handleRetry = () => {
+    if (disabled) return
+    if (!lastSubmittedInput?.trim()) return
+    if (status === "streaming") {
+      toast.error("Please wait for the current response to finish or stop it first!")
+      return
+    }
+    setShowRetry(false)
+    sendMessage(
+      { role: "user", parts: [{ type: "text", text: lastSubmittedInput }] },
+      { body: { selectedModelId, selectedToolName: selectedTool?.toolName || null } }
+    )
+    setInput("")
   }
 
   const handleConfirm = () => {
-    if (disabled) return;
+    if (disabled) return
     if (!chatId) {
-      toast.error("Please reload chatId not found");
-      return;
+      toast.error("Please reload chatId not found")
+      return
     }
     if (status === "streaming") {
-      toast.error("Please wait for the current response to finish or stop it first!");
-      return;
+      toast.error("Please wait for the current response to finish or stop it first!")
+      return
     }
     setRequiresConfirm?.(false)
     sendMessage(
       { role: "user", parts: [{ type: "text", text: "确认" }] },
-      { body: { selectedModelId, selectedToolName: selectedTool?.name || null } }
+      { body: { selectedModelId, selectedToolName: selectedTool?.toolName || null } }
     )
   }
+
+  useEffect(() => {
+    if (!error || !lastSubmittedInput) return
+    setShowRetry(true)
+    if (!input.trim()) {
+      setInput(lastSubmittedInput)
+    }
+  }, [error, input, lastSubmittedInput, setInput])
 
   return (
     <PromptInput className={cn(`rounded-3xl`, className)} onSubmit={onSubmit}>
       <div className="relative w-full">
+        {showRetry && lastSubmittedInput && (
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+            <span>发送失败，已保留输入，可一键重发。</span>
+            <Button size="sm" variant="outline" onClick={handleRetry}>
+              一键重发
+            </Button>
+          </div>
+        )}
         {requiresConfirm && (
           <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             <span>{confirmMessage}</span>
@@ -146,7 +182,7 @@ const ChatInput = (props: Props) => {
             rows={2}
             autoFocus
             value={input}
-            className="text-sm w-full"
+            className="w-full text-sm"
             onChange={handleInput}
           />
         </PromptInputBody>
@@ -174,35 +210,31 @@ const ChatInput = (props: Props) => {
                 Tools
               </PromptInputButton>
             </PopoverTrigger>
-            <PopoverContent
-              className="w-48 px-1.5 py-2 drop-shadow-sm"
-              align="start"
-            >
+            <PopoverContent className="w-48 px-1.5 py-2 drop-shadow-sm" align="start">
               <ul className="space-y-px">
-                {AVAILABLE_TOOLS?.map((tool) => {
-                  const Icon = tool.icon;
+                {AVAILABLE_TOOLS?.map(tool => {
+                  const Icon = tool.icon
                   return (
                     <li key={tool.type}>
                       <button
-                        className="w-full flex items-center gap-1 p-2 rounded-md hover:bg-accent text-left text-sm transition-colors "
-                        onClick={() => handleSelectTool(tool)}
-                      >
+                        className="hover:bg-accent flex w-full items-center gap-1 rounded-md p-2 text-left text-sm transition-colors"
+                        onClick={() => handleSelectTool(tool)}>
                         <Icon size={14} className="text-muted-foreground" />
                         {tool.name}
                       </button>
                     </li>
-                  );
+                  )
                 })}
               </ul>
             </PopoverContent>
           </Popover>
         </PromptInputTools>
         {isGenerating ? (
-          <Button size="icon" className="bg-muted! rounded-full dark:bg-black border cursor-pointer" onClick={handleStop}>
+          <Button size="icon" className="bg-muted! cursor-pointer rounded-full border dark:bg-black" onClick={handleStop}>
             <RiSquareFill size={14} className="text-black dark:text-white" />
           </Button>
         ) : (
-          <PromptInputSubmit status={status} disabled={!input.trim() || disabled} className="absolute right-2 rounded-full bottom-1.5 text-white">
+          <PromptInputSubmit status={status} disabled={!input.trim() || disabled} className="absolute right-2 bottom-1.5 rounded-full text-white">
             <ArrowUpIcon size={25} />
           </PromptInputSubmit>
         )}

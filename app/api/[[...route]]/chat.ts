@@ -41,8 +41,8 @@ function decideToolErrorNotice(errorType: ToolErrorType | undefined) {
       return null
   }
 }
-const ToolNameSchema = z.enum(["createNote", "searchNote", "webSearch", "extractWebUrl"])
 
+const ToolNameSchema = z.enum(["createNote", "searchNote", "webSearch", "extractWebUrl"])
 const chatSchema = z.object({
   id: z.string().min(1),
   message: z.custom<UIMessage>(),
@@ -62,6 +62,15 @@ export const chatRoute = new Hono()
       const { id, message, selectedModelId, selectedToolName } = c.req.valid("json")
       // console.log("🚀 ~ message:", message)
       const chatId = id
+      
+      const abortSignal = c.req.raw.signal
+      abortSignal?.addEventListener(
+        "abort",
+        () => {
+          resetChatState(chatId)
+        },
+        { once: true }
+      )
 
       // 处理工具请求, 状态机判断
       const selectedTool = selectedToolName ?? null
@@ -95,6 +104,11 @@ export const chatRoute = new Hono()
       })
 
       if (!chat) {
+        const existChat = await prisma.chat.findUnique({ where: { id } })
+        // 避免不属于用户的chatId执行
+        if (existChat) {
+          return c.json({ code: 403, message: "Forbidden: chat does not belong to you", data: null }, 403)
+        }
         const title = await generateTitleForUserMessage({ message })
         chat = await prisma.chat.create({
           data: {
@@ -184,6 +198,7 @@ export const chatRoute = new Hono()
         },
         onError({ error }) {
           console.error("streamText onError:", error)
+          resetChatState(chatId)
         },
       })
 
