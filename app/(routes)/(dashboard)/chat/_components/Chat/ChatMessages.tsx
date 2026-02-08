@@ -17,23 +17,31 @@ interface Props {
 }
 
 const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
-  const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
+  const { scrollRef, contentRef, scrollToBottom, isAtBottom } = useStickToBottom()
   const lastMsgIdRef = useRef<string | undefined>(undefined)
+  const lastPartsSigRef = useRef("")
 
   useEffect(() => {
-    const lastId = messages[messages.length - 1]?.id
-    const hasNewMessage = lastId && lastId !== lastMsgIdRef.current
-    if (hasNewMessage) {
+    const last = messages[messages.length - 1]
+    const lastId = last?.id
+    const partsSig = JSON.stringify(last?.parts ?? [])
+
+    if (lastId && lastId !== lastMsgIdRef.current) {
       scrollToBottom({ preserveScrollPosition: true })
       lastMsgIdRef.current = lastId
+      lastPartsSigRef.current = partsSig
+      return
     }
-  }, [messages.length, scrollToBottom])
+
+    // 只有用户还在底部时才自动滚动，用户往上不被拉回底部
+    if (status === "streaming" && isAtBottom && partsSig !== lastPartsSigRef.current) {
+      scrollToBottom({ preserveScrollPosition: true })
+      lastPartsSigRef.current = partsSig
+    }
+  }, [messages, status, isAtBottom, scrollToBottom])
 
   const showGreeting = !isLoading && messages.length === 0
-  const showThinking =
-    status === "submitted" &&
-    messages.length > 0 &&
-    messages[messages.length - 1]?.role === "user"
+  const showThinking = status === "submitted" && messages.length > 0 && messages[messages.length - 1]?.role === "user"
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto">
@@ -43,13 +51,7 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
             {/* loading */}
             <AnimatePresence initial={false}>
               {isLoading && (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18 }}
-                >
+                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                   <LoadingMessages />
                 </motion.div>
               )}
@@ -63,8 +65,7 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                >
+                  transition={{ duration: 0.18, ease: "easeOut" }}>
                   <Greeting />
                 </motion.div>
               )}
@@ -78,13 +79,8 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                >
-                  <PreviewMessage
-                    key={message.id}
-                    message={message}
-                    isLoading={status === "streaming" && messages.length - 1 === index}
-                  />
+                  transition={{ duration: 0.18, ease: "easeOut" }}>
+                  <PreviewMessage key={message.id} message={message} isLoading={status === "streaming" && messages.length - 1 === index} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -97,13 +93,9 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                >
+                  transition={{ duration: 0.18, ease: "easeOut" }}>
                   {/* 呼吸效果，让“正在生成”更像市面 AI */}
-                  <motion.div
-                    animate={{ opacity: [0.55, 1, 0.55] }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                  >
+                  <motion.div animate={{ opacity: [0.55, 1, 0.55] }} transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}>
                     <LoadingMessages isDot />
                   </motion.div>
                 </motion.div>
@@ -118,8 +110,7 @@ const ChatMessages = ({ messages = [], status, isLoading, error }: Props) => {
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                >
+                  transition={{ duration: 0.18, ease: "easeOut" }}>
                   <ChatErrorAlert title="Chat Error" message={error.message ?? "Something went wrong"} />
                 </motion.div>
               )}

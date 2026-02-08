@@ -88,7 +88,7 @@ const ChatInput = (props: Props) => {
       return
     }
 
-    if (status === "streaming") {
+    if (isGenerating) {
       toast.error("Please wait for the current response to finish or stop it first!")
       return
     }
