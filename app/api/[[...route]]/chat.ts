@@ -193,7 +193,7 @@ export const chatRoute = new Hono()
         generateMessageId: () => generateUUID(),
         originalMessages: newUIMessages,
         onFinish: async ({ messages, responseMessage }) => {
-          console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
+          // console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
           try {
             // 工具状态
             if (toolCalledInRun) {
@@ -269,7 +269,7 @@ export const chatRoute = new Hono()
         },
         orderBy: { createdAt: "desc" },
       })
-      console.log("🚀 ~ chat:", chat)
+      // console.log("🚀 ~ chat:", chat)
 
       if (!chat) {
         return c.json({ code: 200, message: "Chat not found", data: null })

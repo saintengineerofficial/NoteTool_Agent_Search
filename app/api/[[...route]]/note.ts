@@ -72,7 +72,7 @@ export const noteRoute = new Hono()
     }
   })
   .get("/list", getAuthUser, async c => {
-    console.log("🚀 ~ c:", c)
+    // console.log("🚀 ~ c:", c)
 
     try {
       const user = c.get("user")

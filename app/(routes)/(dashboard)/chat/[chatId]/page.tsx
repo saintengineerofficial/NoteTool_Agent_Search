@@ -14,11 +14,6 @@ const Page = () => {
 
   const { data: chatRes, isLoading } = useChatId(chatId)
 
-  if (!chatRes?.data) {
-    toast(chatRes?.message)
-    router.replace("/home")
-  }
-
   const chatData = chatRes?.data
 
   return (

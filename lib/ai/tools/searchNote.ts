@@ -15,22 +15,22 @@ export const searchNote = (userId: string) =>
         const notes = await retryWithBackoff(
           () =>
             prisma.note.findMany({
-          where: {
-            userId,
-            // 满足任意一个分支就算匹配
-            OR: [
-              { title: { contains: query, mode: "insensitive" } },
-              { content: { contains: query, mode: "insensitive" } }, //insensitive大小写不敏感。
-            ],
-          },
-          orderBy: { createdAt: "desc" },
-          take: limit,
-          select: {
-            id: true,
-            title: true,
-            content: true,
-            createdAt: true,
-          },
+              where: {
+                userId,
+                // 满足任意一个分支就算匹配
+                OR: [
+                  { title: { contains: query, mode: "insensitive" } },
+                  { content: { contains: query, mode: "insensitive" } }, //insensitive大小写不敏感。
+                ],
+              },
+              orderBy: { createdAt: "desc" },
+              take: limit,
+              select: {
+                id: true,
+                title: true,
+                content: true,
+                createdAt: true,
+              },
             }),
           {
             retries: 1,

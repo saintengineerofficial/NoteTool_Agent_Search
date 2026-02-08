@@ -34,7 +34,6 @@ export const useChatId = (id: string) => {
     queryFn: async () => {
       const response = await api.chat[":id"].$get({ param: { id } })
       if (!response.ok) throw new Error("Failed to fetch chat")
-
       return response.json() as any
     },
     enabled: !!id,
