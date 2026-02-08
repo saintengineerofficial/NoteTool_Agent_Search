@@ -28,6 +28,7 @@ export const webSearch = () =>
             retries: 2,
             shouldRetry: err => {
               const type = classifyToolError(err)
+              // 速率限制、超时、网络错误在重试
               return type === "rate_limit" || type === "timeout" || type === "network"
             },
           }

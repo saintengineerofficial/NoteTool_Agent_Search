@@ -43,7 +43,7 @@ export function updateChatState(
   resultSummary: string | null = null,
   requiresConfirm: boolean = false
 ) {
-  console.log("🚀 ~ updateChatState ~ newState:", newState)
+  // console.log("🚀 ~ updateChatState ~ newState:", newState)
 
   const chat = getChatState(chatId)
   chat.state = newState

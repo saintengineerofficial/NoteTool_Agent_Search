@@ -9,7 +9,7 @@ import { DEVELOPMENT_CHAT_MODEL, type ChatModel } from "@/lib/ai/models"
 import { generateTitleForUserMessage } from "@/lib/ai/actions"
 import { isProduction, ModelProvider } from "@/lib/ai/providers"
 import { generateUUID } from "@/lib/utils"
-import { createNote } from "@/lib/ai/tools/creatNote"
+import { createNote } from "@/lib/ai/tools/createNote"
 import { searchNote } from "@/lib/ai/tools/searchNote"
 import { webSearch } from "@/lib/ai/tools/webSearch"
 import { extractWebUrl } from "@/lib/ai/tools/extractWebUrl"
@@ -41,12 +41,13 @@ function decideToolErrorNotice(errorType: ToolErrorType | undefined) {
       return null
   }
 }
+const ToolNameSchema = z.enum(["createNote", "searchNote", "webSearch", "extractWebUrl"])
 
 const chatSchema = z.object({
   id: z.string().min(1),
   message: z.custom<UIMessage>(),
   selectedModelId: z.string() as z.ZodType<ChatModel["id"]>,
-  selectedToolName: z.string().nullable(),
+  selectedToolName: ToolNameSchema.nullable(),
 })
 
 const chatIdSchema = z.object({
@@ -73,6 +74,7 @@ export const chatRoute = new Hono()
       if (isConfirm) {
         setRequiresConfirm(chatId, false)
       }
+      // 状态机类型
       let action = handleToolRequest(chatId, toolName, inputSnapshot)
       if (action.type === "plan") {
         action = planTask(chatId, action.toolName, action.input)
@@ -88,8 +90,8 @@ export const chatRoute = new Hono()
         return c.json({ code: 409, message: "Unexpected decide state. Please retry.", data: null }, 409)
       }
 
-      let chat = await prisma.chat.findUnique({
-        where: { id },
+      let chat = await prisma.chat.findFirst({
+        where: { id, userId: user.id },
       })
 
       if (!chat) {
@@ -122,6 +124,7 @@ export const chatRoute = new Hono()
 
       // 转换成 model 格式
       const modelMessages = convertToModelMessages(newUIMessages)
+      // console.log("🚀 ~ modelMessages:", modelMessages)
 
       // 新的消息创建到数据库
       await prisma.message.create({
@@ -157,6 +160,8 @@ export const chatRoute = new Hono()
         tools,
         toolChoice,
         onStepFinish(step) {
+          // console.log("🚀 ~ step:", step)
+
           const toolResults = step.toolResults ?? []
           if (toolResults?.length > 0) {
             // 记录工具状态
@@ -188,7 +193,7 @@ export const chatRoute = new Hono()
         generateMessageId: () => generateUUID(),
         originalMessages: newUIMessages,
         onFinish: async ({ messages, responseMessage }) => {
-          // console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
+          console.log("🚀 ~ messages, responseMessage:", messages, responseMessage)
           try {
             // 工具状态
             if (toolCalledInRun) {
@@ -267,7 +272,7 @@ export const chatRoute = new Hono()
       console.log("🚀 ~ chat:", chat)
 
       if (!chat) {
-        return c.json({ code: 200, message: "success", data: null })
+        return c.json({ code: 200, message: "Chat not found", data: null })
       }
 
       const uiMessages = chat.messages.map(m => ({

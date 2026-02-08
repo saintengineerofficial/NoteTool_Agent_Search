@@ -1,3 +1,4 @@
+// 工具错误类型
 export type ToolErrorType = "rate_limit" | "auth" | "network" | "timeout" | "empty_result" | "invalid_format" | "unknown"
 
 export type ToolResult<T> = {
@@ -7,6 +8,7 @@ export type ToolResult<T> = {
   errorType?: ToolErrorType
 }
 
+// 返回第一个完成的 Promise，如果超时发生，抛出 TIMEOUT 错误
 export const withTimeout = async <T>(p: Promise<T>, ms = 12000) =>
   await Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("TIMEOUT")), ms))])
 
@@ -18,6 +20,7 @@ export function fail(message: string, errorType: ToolErrorType = "unknown", code
   return { code, message, data: null, errorType }
 }
 
+// ?根据错误消息的内容分类，其实不准确，因为有些错误不是我们定义的错误类型
 export function classifyToolError(error: unknown): ToolErrorType {
   const msg = error instanceof Error ? error.message : String(error)
   if (/TIMEOUT/i.test(msg)) return "timeout"
@@ -27,6 +30,7 @@ export function classifyToolError(error: unknown): ToolErrorType {
   return "unknown"
 }
 
+// 2次重试
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   options: {
@@ -38,13 +42,14 @@ export async function retryWithBackoff<T>(
   const { retries = 2, baseDelayMs = 300, shouldRetry } = options
   let attempt = 0
   while (true) {
+    // 无限循环，直到成功或达到最大重试次数
     try {
       return await fn()
     } catch (error) {
       attempt += 1
       const retryable = shouldRetry ? shouldRetry(error) : false
       if (!retryable || attempt > retries) throw error
-      const delay = baseDelayMs * Math.pow(2, attempt - 1)
+      const delay = baseDelayMs * Math.pow(2, attempt - 1) // 指数退避
       await new Promise(resolve => setTimeout(resolve, delay))
     }
   }

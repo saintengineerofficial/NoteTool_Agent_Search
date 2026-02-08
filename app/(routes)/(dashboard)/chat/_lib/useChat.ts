@@ -29,14 +29,14 @@ export const useChat = () => {
 }
 
 export const useChatId = (id: string) => {
-  return useQuery<APIResponse<ChatDetail>, Error, ChatDetail>({
+  return useQuery<APIResponse<ChatDetail>>({
     queryKey: ["chat", id],
     queryFn: async () => {
       const response = await api.chat[":id"].$get({ param: { id } })
       if (!response.ok) throw new Error("Failed to fetch chat")
-      return response.json() as any //?
+
+      return response.json() as any
     },
     enabled: !!id,
-    select: data => data.data,
   })
 }

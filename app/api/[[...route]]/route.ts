@@ -9,12 +9,12 @@ export const runtime = "nodejs"
 
 const app = new Hono()
 
-app.use("*", (c, next) => {
-  c.header("Access-Control-Allow-Origin", "https://totoai.saintengineerofficial.online")
-  c.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-  c.header("Access-Control-Allow-Headers", "Content-Type")
-  return next()
-})
+// app.use("*", (c, next) => {
+//   c.header("Access-Control-Allow-Origin", "https://totoai.saintengineerofficial.online")
+//   c.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+//   c.header("Access-Control-Allow-Headers", "Content-Type")
+//   return next()
+// })
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {

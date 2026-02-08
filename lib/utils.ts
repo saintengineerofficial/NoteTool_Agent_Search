@@ -1,12 +1,11 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { v4 } from "uuid";
+import { v4 } from "uuid"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-
 export function generateUUID(): string {
-  return v4();
+  return v4()
 }
