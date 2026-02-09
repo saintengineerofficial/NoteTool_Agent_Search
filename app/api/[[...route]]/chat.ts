@@ -142,6 +142,7 @@ export const chatRoute = new Hono()
         },
       })
 
+      // 工具
       const tools = {
         createNote: createNote(user.id),
         searchNote: searchNote(user.id),
