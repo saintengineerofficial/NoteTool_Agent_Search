@@ -149,7 +149,7 @@ export const chatRoute = new Hono()
         webSearch: webSearch(),
         extractWebUrl: extractWebUrl(),
       } as const
-      
+
       const forcedToolName = (toolName !== "auto" ? toolName : null) as keyof typeof tools
       const toolVar = forcedToolName ? ({ type: "tool", toolName: forcedToolName } as const) : "auto"
       const toolChoice = action.type === "call_tool" ? toolVar : "none"
@@ -169,7 +169,6 @@ export const chatRoute = new Hono()
         toolChoice,
         onStepFinish(step) {
           // console.log("🚀 ~ step:", step)
-
           const toolResults = step.toolResults ?? []
           if (toolResults?.length > 0) {
             // 记录工具状态
